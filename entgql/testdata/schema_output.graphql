@@ -43,7 +43,7 @@ enum CategoryOrderField {
 """
 CategoryStatus is enum for the field status
 """
-enum CategoryStatus @goModel(model: "entgo.io/contrib/entgql/internal/todo/ent/category.Status") {
+enum CategoryStatus @goModel(model: "github.com/LunarHUE/ent-contrib/entgql/internal/todo/ent/category.Status") {
   ENABLED
   DISABLED
 }
@@ -133,7 +133,7 @@ Properties by which OneToMany connections can be ordered.
 enum OneToManyOrderField {
   NAME
 }
-type Organization @goModel(model: "entgo.io/contrib/entgql/internal/todo/ent.Workspace") {
+type Organization @goModel(model: "github.com/LunarHUE/ent-contrib/entgql/internal/todo/ent.Workspace") {
   id: ID!
   name: String!
 }
@@ -201,7 +201,7 @@ enum TodoOrderField {
 """
 TodoStatus is enum for the field status
 """
-enum TodoStatus @goModel(model: "entgo.io/contrib/entgql/internal/todo/ent/todo.Status") {
+enum TodoStatus @goModel(model: "github.com/LunarHUE/ent-contrib/entgql/internal/todo/ent/todo.Status") {
   IN_PROGRESS
   COMPLETED
   PENDING

@@ -3,7 +3,7 @@ syntax = "proto3";
 
 package entpb;
 
-option go_package = "entgo.io/contrib/entproto/internal/bare/ent/proto/entpb";
+option go_package = "github.com/LunarHUE/ent-contrib/entproto/internal/bare/ent/proto/entpb";
 
 message User {
   int64 id = 1;

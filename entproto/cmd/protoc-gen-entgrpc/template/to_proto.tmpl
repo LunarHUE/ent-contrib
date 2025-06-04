@@ -1,4 +1,4 @@
-{{- /*gotype: entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc.serviceGenerator*/ -}}
+{{- /*gotype: github.com/LunarHUE/ent-contrib/entproto/cmd/protoc-gen-entgrpc.serviceGenerator*/ -}}
 {{ define "to_proto_func" }}
     // toProto{{ .EntType.Name }} transforms the ent type to the pb type
     func toProto{{ .EntType.Name }}(e *{{ .EntPackage.Ident .EntType.Name | ident }}) (*{{ .EntType.Name }}, error) {

@@ -14,13 +14,13 @@ Prerequesites:
 Download the module:
 
 ```console
-go get -u entgo.io/contrib/entproto
+go get -u github.com/LunarHUE/ent-contrib/entproto
 ```
 
 Install `protoc-gen-entgrpc` (ent's gRPC service implementation generator):
 
 ```console
-go get entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc
+go get github.com/LunarHUE/ent-contrib/entproto/cmd/protoc-gen-entgrpc
 ```
 
 Annotate the schema with `entproto.Message()` and all fields with the desired proto field numbers (notice the field number 1 is reserved for the schema's `ID` field:
@@ -32,7 +32,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
-	"entgo.io/contrib/entproto"
+	"github.com/LunarHUE/ent-contrib/entproto"
 )
 
 type User struct {
@@ -57,7 +57,7 @@ func (User) Fields() []ent.Field {
 Run the code generation:
 
 ```console
-go run entgo.io/contrib/entproto/cmd/entproto -path ./ent/schema
+go run github.com/LunarHUE/ent-contrib/entproto/cmd/entproto -path ./ent/schema
 ```
 
 The proto file is generated under `./ent/proto/entpb/entpb.proto`:
@@ -68,7 +68,7 @@ syntax = "proto3";
 
 package entpb;
 
-option go_package = "entgo.io/contrib/entproto/internal/todo/ent/proto/entpb";
+option go_package = "github.com/LunarHUE/ent-contrib/entproto/internal/todo/ent/proto/entpb";
 
 message User {
   int32 id = 1;
@@ -137,7 +137,7 @@ package main
 import (
 	"log"
 
-	"entgo.io/contrib/entproto"
+	"github.com/LunarHUE/ent-contrib/entproto"
 	"entgo.io/ent/entc"
 	"entgo.io/ent/entc/gen"
 )
@@ -492,7 +492,7 @@ To rebuild the `protoc-gen-entgrpc` plugin, regenerate the code and run all test
 
 ```shell
 go generate ./cmd/protoc-gen-entgrpc/... &&
-  go install entgo.io/contrib/entproto/cmd/protoc-gen-entgrpc &&
+  go install github.com/LunarHUE/ent-contrib/entproto/cmd/protoc-gen-entgrpc &&
   go generate ./... &&
   go test ./...
 ```

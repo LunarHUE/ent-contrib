@@ -1,4 +1,4 @@
-module github.com/LunarHUE/ent-contrib/entproto
+module github.com/LunarHUE/ent-contrib
 
 go 1.23.4
 
