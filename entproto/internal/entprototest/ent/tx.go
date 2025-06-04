@@ -14,6 +14,8 @@ type Tx struct {
 	config
 	// AllMethodsService is the client for interacting with the AllMethodsService builders.
 	AllMethodsService *AllMethodsServiceClient
+	// AutoFieldMessage is the client for interacting with the AutoFieldMessage builders.
+	AutoFieldMessage *AutoFieldMessageClient
 	// BlogPost is the client for interacting with the BlogPost builders.
 	BlogPost *BlogPostClient
 	// Category is the client for interacting with the Category builders.
@@ -192,6 +194,7 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.AllMethodsService = NewAllMethodsServiceClient(tx.config)
+	tx.AutoFieldMessage = NewAutoFieldMessageClient(tx.config)
 	tx.BlogPost = NewBlogPostClient(tx.config)
 	tx.Category = NewCategoryClient(tx.config)
 	tx.DependsOnSkipped = NewDependsOnSkippedClient(tx.config)

@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 
 	"entgo.io/contrib/entproto/internal/entprototest/ent/allmethodsservice"
+	"entgo.io/contrib/entproto/internal/entprototest/ent/autofieldmessage"
 	"entgo.io/contrib/entproto/internal/entprototest/ent/blogpost"
 	"entgo.io/contrib/entproto/internal/entprototest/ent/category"
 	"entgo.io/contrib/entproto/internal/entprototest/ent/dependsonskipped"
@@ -49,6 +50,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// AllMethodsService is the client for interacting with the AllMethodsService builders.
 	AllMethodsService *AllMethodsServiceClient
+	// AutoFieldMessage is the client for interacting with the AutoFieldMessage builders.
+	AutoFieldMessage *AutoFieldMessageClient
 	// BlogPost is the client for interacting with the BlogPost builders.
 	BlogPost *BlogPostClient
 	// Category is the client for interacting with the Category builders.
@@ -107,6 +110,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.AllMethodsService = NewAllMethodsServiceClient(c.config)
+	c.AutoFieldMessage = NewAutoFieldMessageClient(c.config)
 	c.BlogPost = NewBlogPostClient(c.config)
 	c.Category = NewCategoryClient(c.config)
 	c.DependsOnSkipped = NewDependsOnSkippedClient(c.config)
@@ -223,6 +227,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                      ctx,
 		config:                   cfg,
 		AllMethodsService:        NewAllMethodsServiceClient(cfg),
+		AutoFieldMessage:         NewAutoFieldMessageClient(cfg),
 		BlogPost:                 NewBlogPostClient(cfg),
 		Category:                 NewCategoryClient(cfg),
 		DependsOnSkipped:         NewDependsOnSkippedClient(cfg),
@@ -266,6 +271,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                      ctx,
 		config:                   cfg,
 		AllMethodsService:        NewAllMethodsServiceClient(cfg),
+		AutoFieldMessage:         NewAutoFieldMessageClient(cfg),
 		BlogPost:                 NewBlogPostClient(cfg),
 		Category:                 NewCategoryClient(cfg),
 		DependsOnSkipped:         NewDependsOnSkippedClient(cfg),
@@ -318,13 +324,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.AllMethodsService, c.BlogPost, c.Category, c.DependsOnSkipped,
-		c.DuplicateNumberMessage, c.EnumWithConflictingValue, c.ExplicitSkippedMessage,
-		c.Image, c.ImplicitSkippedMessage, c.InvalidFieldMessage, c.MessageWithEnum,
-		c.MessageWithFieldOne, c.MessageWithID, c.MessageWithInts,
-		c.MessageWithOptionals, c.MessageWithPackageName, c.MessageWithStrings,
-		c.NoBackref, c.OneMethodService, c.Portal, c.SkipEdgeExample,
-		c.TwoMethodService, c.User, c.ValidMessage,
+		c.AllMethodsService, c.AutoFieldMessage, c.BlogPost, c.Category,
+		c.DependsOnSkipped, c.DuplicateNumberMessage, c.EnumWithConflictingValue,
+		c.ExplicitSkippedMessage, c.Image, c.ImplicitSkippedMessage,
+		c.InvalidFieldMessage, c.MessageWithEnum, c.MessageWithFieldOne,
+		c.MessageWithID, c.MessageWithInts, c.MessageWithOptionals,
+		c.MessageWithPackageName, c.MessageWithStrings, c.NoBackref,
+		c.OneMethodService, c.Portal, c.SkipEdgeExample, c.TwoMethodService, c.User,
+		c.ValidMessage,
 	} {
 		n.Use(hooks...)
 	}
@@ -334,13 +341,14 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.AllMethodsService, c.BlogPost, c.Category, c.DependsOnSkipped,
-		c.DuplicateNumberMessage, c.EnumWithConflictingValue, c.ExplicitSkippedMessage,
-		c.Image, c.ImplicitSkippedMessage, c.InvalidFieldMessage, c.MessageWithEnum,
-		c.MessageWithFieldOne, c.MessageWithID, c.MessageWithInts,
-		c.MessageWithOptionals, c.MessageWithPackageName, c.MessageWithStrings,
-		c.NoBackref, c.OneMethodService, c.Portal, c.SkipEdgeExample,
-		c.TwoMethodService, c.User, c.ValidMessage,
+		c.AllMethodsService, c.AutoFieldMessage, c.BlogPost, c.Category,
+		c.DependsOnSkipped, c.DuplicateNumberMessage, c.EnumWithConflictingValue,
+		c.ExplicitSkippedMessage, c.Image, c.ImplicitSkippedMessage,
+		c.InvalidFieldMessage, c.MessageWithEnum, c.MessageWithFieldOne,
+		c.MessageWithID, c.MessageWithInts, c.MessageWithOptionals,
+		c.MessageWithPackageName, c.MessageWithStrings, c.NoBackref,
+		c.OneMethodService, c.Portal, c.SkipEdgeExample, c.TwoMethodService, c.User,
+		c.ValidMessage,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -351,6 +359,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *AllMethodsServiceMutation:
 		return c.AllMethodsService.mutate(ctx, m)
+	case *AutoFieldMessageMutation:
+		return c.AutoFieldMessage.mutate(ctx, m)
 	case *BlogPostMutation:
 		return c.BlogPost.mutate(ctx, m)
 	case *CategoryMutation:
@@ -532,6 +542,139 @@ func (c *AllMethodsServiceClient) mutate(ctx context.Context, m *AllMethodsServi
 		return (&AllMethodsServiceDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown AllMethodsService mutation op: %q", m.Op())
+	}
+}
+
+// AutoFieldMessageClient is a client for the AutoFieldMessage schema.
+type AutoFieldMessageClient struct {
+	config
+}
+
+// NewAutoFieldMessageClient returns a client for the AutoFieldMessage from the given config.
+func NewAutoFieldMessageClient(c config) *AutoFieldMessageClient {
+	return &AutoFieldMessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `autofieldmessage.Hooks(f(g(h())))`.
+func (c *AutoFieldMessageClient) Use(hooks ...Hook) {
+	c.hooks.AutoFieldMessage = append(c.hooks.AutoFieldMessage, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `autofieldmessage.Intercept(f(g(h())))`.
+func (c *AutoFieldMessageClient) Intercept(interceptors ...Interceptor) {
+	c.inters.AutoFieldMessage = append(c.inters.AutoFieldMessage, interceptors...)
+}
+
+// Create returns a builder for creating a AutoFieldMessage entity.
+func (c *AutoFieldMessageClient) Create() *AutoFieldMessageCreate {
+	mutation := newAutoFieldMessageMutation(c.config, OpCreate)
+	return &AutoFieldMessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of AutoFieldMessage entities.
+func (c *AutoFieldMessageClient) CreateBulk(builders ...*AutoFieldMessageCreate) *AutoFieldMessageCreateBulk {
+	return &AutoFieldMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *AutoFieldMessageClient) MapCreateBulk(slice any, setFunc func(*AutoFieldMessageCreate, int)) *AutoFieldMessageCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &AutoFieldMessageCreateBulk{err: fmt.Errorf("calling to AutoFieldMessageClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*AutoFieldMessageCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &AutoFieldMessageCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for AutoFieldMessage.
+func (c *AutoFieldMessageClient) Update() *AutoFieldMessageUpdate {
+	mutation := newAutoFieldMessageMutation(c.config, OpUpdate)
+	return &AutoFieldMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AutoFieldMessageClient) UpdateOne(afm *AutoFieldMessage) *AutoFieldMessageUpdateOne {
+	mutation := newAutoFieldMessageMutation(c.config, OpUpdateOne, withAutoFieldMessage(afm))
+	return &AutoFieldMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AutoFieldMessageClient) UpdateOneID(id int) *AutoFieldMessageUpdateOne {
+	mutation := newAutoFieldMessageMutation(c.config, OpUpdateOne, withAutoFieldMessageID(id))
+	return &AutoFieldMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for AutoFieldMessage.
+func (c *AutoFieldMessageClient) Delete() *AutoFieldMessageDelete {
+	mutation := newAutoFieldMessageMutation(c.config, OpDelete)
+	return &AutoFieldMessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *AutoFieldMessageClient) DeleteOne(afm *AutoFieldMessage) *AutoFieldMessageDeleteOne {
+	return c.DeleteOneID(afm.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *AutoFieldMessageClient) DeleteOneID(id int) *AutoFieldMessageDeleteOne {
+	builder := c.Delete().Where(autofieldmessage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AutoFieldMessageDeleteOne{builder}
+}
+
+// Query returns a query builder for AutoFieldMessage.
+func (c *AutoFieldMessageClient) Query() *AutoFieldMessageQuery {
+	return &AutoFieldMessageQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeAutoFieldMessage},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a AutoFieldMessage entity by its id.
+func (c *AutoFieldMessageClient) Get(ctx context.Context, id int) (*AutoFieldMessage, error) {
+	return c.Query().Where(autofieldmessage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AutoFieldMessageClient) GetX(ctx context.Context, id int) *AutoFieldMessage {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AutoFieldMessageClient) Hooks() []Hook {
+	return c.hooks.AutoFieldMessage
+}
+
+// Interceptors returns the client interceptors.
+func (c *AutoFieldMessageClient) Interceptors() []Interceptor {
+	return c.inters.AutoFieldMessage
+}
+
+func (c *AutoFieldMessageClient) mutate(ctx context.Context, m *AutoFieldMessageMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&AutoFieldMessageCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&AutoFieldMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&AutoFieldMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&AutoFieldMessageDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown AutoFieldMessage mutation op: %q", m.Op())
 	}
 }
 
@@ -3773,17 +3916,17 @@ func (c *ValidMessageClient) mutate(ctx context.Context, m *ValidMessageMutation
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		AllMethodsService, BlogPost, Category, DependsOnSkipped, DuplicateNumberMessage,
-		EnumWithConflictingValue, ExplicitSkippedMessage, Image,
-		ImplicitSkippedMessage, InvalidFieldMessage, MessageWithEnum,
+		AllMethodsService, AutoFieldMessage, BlogPost, Category, DependsOnSkipped,
+		DuplicateNumberMessage, EnumWithConflictingValue, ExplicitSkippedMessage,
+		Image, ImplicitSkippedMessage, InvalidFieldMessage, MessageWithEnum,
 		MessageWithFieldOne, MessageWithID, MessageWithInts, MessageWithOptionals,
 		MessageWithPackageName, MessageWithStrings, NoBackref, OneMethodService,
 		Portal, SkipEdgeExample, TwoMethodService, User, ValidMessage []ent.Hook
 	}
 	inters struct {
-		AllMethodsService, BlogPost, Category, DependsOnSkipped, DuplicateNumberMessage,
-		EnumWithConflictingValue, ExplicitSkippedMessage, Image,
-		ImplicitSkippedMessage, InvalidFieldMessage, MessageWithEnum,
+		AllMethodsService, AutoFieldMessage, BlogPost, Category, DependsOnSkipped,
+		DuplicateNumberMessage, EnumWithConflictingValue, ExplicitSkippedMessage,
+		Image, ImplicitSkippedMessage, InvalidFieldMessage, MessageWithEnum,
 		MessageWithFieldOne, MessageWithID, MessageWithInts, MessageWithOptionals,
 		MessageWithPackageName, MessageWithStrings, NoBackref, OneMethodService,
 		Portal, SkipEdgeExample, TwoMethodService, User, ValidMessage []ent.Interceptor

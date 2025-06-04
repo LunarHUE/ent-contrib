@@ -21,6 +21,18 @@ func (f AllMethodsServiceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AllMethodsServiceMutation", m)
 }
 
+// The AutoFieldMessageFunc type is an adapter to allow the use of ordinary
+// function as AutoFieldMessage mutator.
+type AutoFieldMessageFunc func(context.Context, *ent.AutoFieldMessageMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AutoFieldMessageFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.AutoFieldMessageMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AutoFieldMessageMutation", m)
+}
+
 // The BlogPostFunc type is an adapter to allow the use of ordinary
 // function as BlogPost mutator.
 type BlogPostFunc func(context.Context, *ent.BlogPostMutation) (ent.Value, error)
