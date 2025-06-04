@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"entgo.io/contrib/entproto/internal/entprototest/ent/allmethodsservice"
+	"entgo.io/contrib/entproto/internal/entprototest/ent/autofieldmessage"
 	"entgo.io/contrib/entproto/internal/entprototest/ent/blogpost"
 	"entgo.io/contrib/entproto/internal/entprototest/ent/category"
 	"entgo.io/contrib/entproto/internal/entprototest/ent/dependsonskipped"
@@ -97,6 +98,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			allmethodsservice.Table:        allmethodsservice.ValidColumn,
+			autofieldmessage.Table:         autofieldmessage.ValidColumn,
 			blogpost.Table:                 blogpost.ValidColumn,
 			category.Table:                 category.ValidColumn,
 			dependsonskipped.Table:         dependsonskipped.ValidColumn,

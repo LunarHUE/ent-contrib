@@ -321,14 +321,35 @@ func (a *Adapter) toProtoMessageDescriptor(genType *gen.Type) (*descriptorpb.Des
 	all := []*gen.Field{genType.ID}
 	all = append(all, genType.Fields...)
 
+	nextNum := IDFieldNumber + 1
+
 	for _, f := range all {
 		if _, ok := f.Annotations[SkipAnnotation]; ok {
 			continue
 		}
 
-		protoField, err := toProtoFieldDescriptor(f)
-		if err != nil {
-			return nil, err
+		var protoField *descriptorpb.FieldDescriptorProto
+		var err error
+		if _, ok := f.Annotations[FieldAnnotation]; ok {
+			fann, err := extractFieldAnnotation(f)
+			if err != nil {
+				return nil, err
+			}
+			protoField, err = pbFieldToDescriptor(f, fann)
+			if err != nil {
+				return nil, err
+			}
+			if fann.Number >= nextNum {
+				nextNum = fann.Number + 1
+			}
+		} else if _, ok := f.Annotations[AutoFieldAnnotation]; ok {
+			protoField, err = toAutoProtoFieldDescriptor(f, nextNum)
+			if err != nil {
+				return nil, err
+			}
+			nextNum++
+		} else {
+			return nil, fmt.Errorf("entproto: field %q missing protobuf annotation", f.Name)
 		}
 		// If the field is an enum type, we need to create the enum descriptor as well.
 		if f.Type.Type == field.TypeEnum {
@@ -346,9 +367,32 @@ func (a *Adapter) toProtoMessageDescriptor(genType *gen.Type) (*descriptorpb.Des
 			continue
 		}
 
-		descriptor, err := a.extractEdgeFieldDescriptor(genType, e)
-		if err != nil {
-			return nil, err
+		var descriptor *descriptorpb.FieldDescriptorProto
+		if _, ok := e.Annotations[FieldAnnotation]; ok {
+			ann, err := extractEdgeAnnotation(e)
+			if err != nil {
+				return nil, fmt.Errorf("entproto: failed extracting proto field number annotation: %w", err)
+			}
+			descriptor, err = a.extractEdgeFieldDescriptor(genType, e, ann)
+			if err != nil {
+				return nil, err
+			}
+			if ann.Number >= nextNum {
+				nextNum = ann.Number + 1
+			}
+		} else if _, ok := e.Annotations[AutoFieldAnnotation]; ok {
+			ann, err := extractAutoEdgeAnnotation(e)
+			if err != nil {
+				return nil, err
+			}
+			ann.Number = nextNum
+			descriptor, err = a.extractEdgeFieldDescriptor(genType, e, ann)
+			if err != nil {
+				return nil, err
+			}
+			nextNum++
+		} else {
+			return nil, fmt.Errorf("entproto: edge %q missing protobuf annotation", e.Name)
 		}
 		if descriptor != nil {
 			msg.Field = append(msg.Field, descriptor)
@@ -375,23 +419,18 @@ func verifyNoDuplicateFieldNumbers(msg *descriptorpb.DescriptorProto) error {
 	return nil
 }
 
-func (a *Adapter) extractEdgeFieldDescriptor(source *gen.Type, e *gen.Edge) (*descriptorpb.FieldDescriptorProto, error) {
+func (a *Adapter) extractEdgeFieldDescriptor(source *gen.Type, e *gen.Edge, ann *pbfield) (*descriptorpb.FieldDescriptorProto, error) {
 	t := descriptorpb.FieldDescriptorProto_TYPE_MESSAGE
 	msgTypeName := pascal(e.Type.Name)
 
-	edgeAnnotation, err := extractEdgeAnnotation(e)
-	if err != nil {
-		return nil, fmt.Errorf("entproto: failed extracting proto field number annotation: %w", err)
-	}
-
-	if edgeAnnotation.Number == 1 {
+	if ann.Number == 1 {
 		return nil, fmt.Errorf("entproto: edge %q has number 1 which is reserved for id", e.Name)
 	}
 
-	if num := int64(edgeAnnotation.Number); num > math.MaxInt32 || num < math.MinInt32 {
+	if num := int64(ann.Number); num > math.MaxInt32 || num < math.MinInt32 {
 		return nil, fmt.Errorf("value %v overflows int32", num)
 	}
-	fieldNum := int32(edgeAnnotation.Number) //nolint:gosec
+	fieldNum := int32(ann.Number) //nolint:gosec
 	fieldDesc := &descriptorpb.FieldDescriptorProto{
 		Number: &fieldNum,
 		Name:   &e.Name,
@@ -458,12 +497,25 @@ func toProtoEnumDescriptor(fld *gen.Field) (*descriptorpb.EnumDescriptorProto, e
 }
 
 func toProtoFieldDescriptor(f *gen.Field) (*descriptorpb.FieldDescriptorProto, error) {
-	fieldDesc := &descriptorpb.FieldDescriptorProto{
-		Name: &f.Name,
-	}
 	fann, err := extractFieldAnnotation(f)
 	if err != nil {
 		return nil, err
+	}
+	return pbFieldToDescriptor(f, fann)
+}
+
+func toAutoProtoFieldDescriptor(f *gen.Field, number int) (*descriptorpb.FieldDescriptorProto, error) {
+	fann, err := extractAutoFieldAnnotation(f)
+	if err != nil {
+		return nil, err
+	}
+	fann.Number = number
+	return pbFieldToDescriptor(f, fann)
+}
+
+func pbFieldToDescriptor(f *gen.Field, fann *pbfield) (*descriptorpb.FieldDescriptorProto, error) {
+	fieldDesc := &descriptorpb.FieldDescriptorProto{
+		Name: &f.Name,
 	}
 	if num := int64(fann.Number); num > math.MaxInt32 || num < math.MinInt32 {
 		return nil, fmt.Errorf("value %v overflows int32", num)

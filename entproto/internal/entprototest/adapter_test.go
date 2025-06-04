@@ -290,3 +290,16 @@ func (suite *AdapterTestSuite) TestOptionals() {
 	suite.Require().EqualValues(descriptorpb.FieldDescriptorProto_TYPE_MESSAGE, bytesField.GetType())
 	suite.Require().EqualValues("BytesValue", uuidField.GetMessageType().GetName())
 }
+
+func (suite *AdapterTestSuite) TestAutoFieldMessage() {
+	message, err := suite.adapter.GetMessageDescriptor("AutoFieldMessage")
+	suite.Require().NoError(err)
+
+	nameField := message.FindFieldByName("name")
+	suite.Require().NotNil(nameField)
+	suite.EqualValues(2, nameField.GetNumber())
+
+	ageField := message.FindFieldByName("age")
+	suite.Require().NotNil(ageField)
+	suite.EqualValues(3, ageField.GetNumber())
+}

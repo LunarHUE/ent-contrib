@@ -9,6 +9,9 @@ import (
 // AllMethodsService is the predicate function for allmethodsservice builders.
 type AllMethodsService func(*sql.Selector)
 
+// AutoFieldMessage is the predicate function for autofieldmessage builders.
+type AutoFieldMessage func(*sql.Selector)
+
 // BlogPost is the predicate function for blogpost builders.
 type BlogPost func(*sql.Selector)
 

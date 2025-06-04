@@ -18,6 +18,18 @@ var (
 		Columns:    AllMethodsServicesColumns,
 		PrimaryKey: []*schema.Column{AllMethodsServicesColumns[0]},
 	}
+	// AutoFieldMessagesColumns holds the columns for the "auto_field_messages" table.
+	AutoFieldMessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "age", Type: field.TypeInt32},
+	}
+	// AutoFieldMessagesTable holds the schema information for the "auto_field_messages" table.
+	AutoFieldMessagesTable = &schema.Table{
+		Name:       "auto_field_messages",
+		Columns:    AutoFieldMessagesColumns,
+		PrimaryKey: []*schema.Column{AutoFieldMessagesColumns[0]},
+	}
 	// BlogPostsColumns holds the columns for the "blog_posts" table.
 	BlogPostsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -369,6 +381,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AllMethodsServicesTable,
+		AutoFieldMessagesTable,
 		BlogPostsTable,
 		CategoriesTable,
 		DependsOnSkippedsTable,
